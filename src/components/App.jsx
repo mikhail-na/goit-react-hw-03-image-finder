@@ -75,7 +75,7 @@ export class App extends Component {
         );
 
         this.setState(prevState => ({
-          galleryItems: [...prevState.galleryItems, ...fetchedData], loading:false, hasButton: this.state.page <= Math.ceil(data.totalHits/12), 
+          galleryItems: [...prevState.galleryItems, ...fetchedData], loading:false, hasButton: this.state.page <= Math.round(data.totalHits/12), 
         }));
         
 
