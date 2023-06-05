@@ -15,5 +15,5 @@ export const ImageGallery = ({ galleryItems }) => {
 };
 
 ImageGallery.propTypes = {
-  galleryItems: PropTypes.arrayOf(PropTypes.string).isRequired,
+  galleryItems: PropTypes.arrayOf(PropTypes.object).isRequired,
 }

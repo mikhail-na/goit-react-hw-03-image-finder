@@ -37,16 +37,14 @@ export class App extends Component {
     const nextQuery = this.state.inputValue;
     const nextPage = this.state.page;
 
-    if (prevState.inputValue !== nextQuery) {
-      this.setState({ page: 1, galleryItems: [], hasButton: false });
-      if (nextPage) {
-        this.handleFetchItems(nextQuery, nextPage);
-      }
-    } else if (prevState.page !== nextPage ) {
-      this.handleFetchItems(nextQuery, nextPage);
-    }
-  }
 
+    if (prevState.inputValue !== nextQuery || prevState.page !== nextPage) {
+      this.handleFetchItems(nextQuery, nextPage);
+      this.setState({ loading:true })
+
+    }
+
+  };
 
   handleFetchItems = (nextQuery, nextPage) => {
     this.setState({ loading: true, error: false });
@@ -57,48 +55,52 @@ export class App extends Component {
     serviceApi
       .fetchData()
       .then(data => {
-      serviceApi.hits = data.totalHits;
 
-      const fetchedData = data.hits.map(
-        ({ webformatURL, largeImageURL, id, tags }) => ({
-          webformatURL,
-          largeImageURL,
-          id,
-          tags,
-        })
-      );
-      // const newData = [...this.state.galleryItems, ...fetchedData];
+         if (!data.totalHits || data.hits.length === 0) {
+          // this.setState({ loading: false, error: true });
+          return toast.error(
+            'Sorry, we could not find any images matching your request. Please try again.'
+          );
+        }
 
-      this.setState(prevState => ({
-        galleryItems: [...prevState.galleryItems, ...fetchedData],
-      }));
-        
-      // if (newData.length >= data.totalHits) {
-      //   this.setState({ loading: false, hasButton: false, error: false});
-      //   return;
-      // }
+        serviceApi.hits = data.totalHits;
 
-      if (!data.totalHits) {
-        this.setState({ loading: false, error: true });
-        return toast.error(
-          'Sorry, we could not find any images matching your request. Please try again.'
+        const fetchedData = data.hits.map(
+          ({ webformatURL, largeImageURL, id, tags }) => ({
+            webformatURL,
+            largeImageURL,
+            id,
+            tags,
+          })
         );
-      }
 
-      if (nextPage === 1) {
-        toast.success(`Congratulations! We found ${serviceApi.hits} images.`);
-      }
+        this.setState(prevState => ({
+          galleryItems: [...prevState.galleryItems, ...fetchedData], loading:false, hasButton: this.state.page <= Math.ceil(data.totalHits/12), 
+        }));
+        
 
-      this.setState({ loading: false, hasButton: true, error: false });
-    });
+         if (nextPage === 1) {
+          toast.success(`Congratulations! We found ${serviceApi.hits} images.`);
+         }
+        
+       
+      })
+      .catch(err => {
+        this.setState({ loading: false })
+        console.log(err.message);
+      })
+      .finally(() => (
+        this.setState({ loading: false})
+      ))
+    
   };
 
   handleFormSubmit = inputValue => {
-    this.setState({ inputValue });
+    this.setState({ inputValue,  page: 1, galleryItems: [], hasButton: false });
   };
 
   handleLoadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1, hasButton: false, loading:true }));
+    this.setState(prevState => ({ page: prevState.page + 1, hasButton: false,  loading: true}));
   };
 
   render() {
